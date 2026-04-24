@@ -416,7 +416,53 @@ Encabezados detectados por el escáner:
 - `Referrer-Policy`
 - `Permissions-Policy`
 
-## 17. Errores encontrados y soluciones
+## 17. Auditoría adicional con SSL Labs
+
+Como verificación complementaria de la seguridad HTTPS, se ejecutó una auditoría sobre el dominio público usando **Qualys SSL Labs**.
+
+### 17.1 Resultado general
+
+| Campo | Valor |
+|---|---|
+| Host evaluado | `mipokedex.duckdns.org` |
+| IP evaluada | `179.33.194.56` |
+| Resultado global | **A+** |
+| Protocolos detectados | TLS 1.2, TLS 1.3 |
+| HSTS | Presente |
+| Forward Secrecy | Activa |
+
+### 17.2 Hallazgos técnicos
+
+Hallazgos positivos confirmados por SSL Labs:
+
+1. El servidor no expone SSLv3, TLS 1.0 ni TLS 1.1.
+2. No se detectaron vulnerabilidades clásicas como **Heartbleed**, **POODLE**, **FREAK**, **LOGJAM** o **BEAST**.
+3. No se observó soporte para **RC4**.
+4. La política **HSTS** fue reconocida correctamente.
+5. La capa TLS obtuvo una calificación **A+**, superior incluso a la nota alcanzada en Security Headers, que evalúa otra dimensión de seguridad.
+
+Hallazgos de compatibilidad:
+
+- SSL Labs reportó fallos de handshake en clientes muy antiguos, por ejemplo:
+  - Android 2.3.7 y varias versiones 4.x antiguas
+  - Internet Explorer 6, 7, 8 y 10
+  - Java 6u45 y 7u25
+  - Safari 5.1.9 y 6.0.4
+
+Este hallazgo no implica una vulnerabilidad; representa una **consecuencia del endurecimiento moderno de TLS**.
+
+### 17.3 Mejora evaluada durante la auditoría
+
+Se intentó habilitar **OCSP stapling** en Nginx como mejora adicional. Sin embargo, el servidor reportó que el certificado actual no publica una URL de responder OCSP, por lo que esa opción fue ignorada. La configuración fue revertida para evitar advertencias innecesarias.
+
+### 17.4 Mejoras recomendadas a partir de la auditoría
+
+1. **Mantener la configuración actual de TLS**, ya que el resultado A+ confirma un nivel de endurecimiento adecuado.
+2. **Eliminar `'unsafe-inline'` de la CSP** para mejorar la seguridad del lado navegador y aspirar a A+ en Security Headers.
+3. **Definir explícitamente un conjunto más reducido de suites TLS 1.2** si se desea un endurecimiento criptográfico más estricto, evaluando el impacto en compatibilidad.
+4. **Valorar si se requiere compatibilidad con clientes heredados**; en caso afirmativo, habría que estudiar una estrategia específica, asumiendo posibles concesiones de seguridad.
+
+## 18. Errores encontrados y soluciones
 
 | Problema | Causa | Solución |
 |---|---|---|
@@ -427,7 +473,7 @@ Encabezados detectados por el escáner:
 | El sitio obtenía calificación B inicialmente | No había redirección a HTTPS ni política final completa | Se agregó TLS, redirección y más encabezados |
 | El sitio quedó en A y no en A+ | La CSP mantiene `'unsafe-inline'` en `script-src` | Se documentó como mejora futura remover o hashear el script inline |
 
-## 18. Consideraciones de seguridad
+## 19. Consideraciones de seguridad
 
 La aplicación quedó razonablemente protegida para el alcance de la actividad, pero es importante reconocer que publicar un servidor doméstico en internet implica riesgos adicionales:
 
@@ -437,7 +483,7 @@ La aplicación quedó razonablemente protegida para el alcance de la actividad, 
 4. El firewall debe limitarse a los puertos estrictamente necesarios.
 5. Los secretos, como el token de DuckDNS, no deben compartirse.
 
-## 19. Mejoras futuras
+## 20. Mejoras futuras
 
 Para elevar el resultado de **A** a **A+**, la mejora más directa es ajustar la CSP:
 
@@ -447,11 +493,11 @@ Para elevar el resultado de **A** a **A+**, la mejora más directa es ajustar la
 También se podrían incorporar:
 
 - escaneo con **OWASP ZAP**,
-- prueba adicional en **SSL Labs**,
+- seguimiento periódico con **SSL Labs**,
 - monitoreo del servicio,
 - endurecimiento extra de TLS y logging.
 
-## 20. Conclusión
+## 21. Conclusión
 
 El despliegue fue completado con éxito. La aplicación quedó publicada en internet, accesible mediante HTTPS y protegida con cabeceras de seguridad relevantes. Además del resultado funcional, el proceso permitió resolver problemas reales de infraestructura, compatibilidad de paquetes, DNS dinámico, apertura de puertos y configuración segura de Nginx.
 

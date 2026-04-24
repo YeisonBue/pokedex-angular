@@ -130,6 +130,27 @@ https://mipokedex.duckdns.org/
 
 El análisis en **securityheaders.com** arrojó una calificación **A**, confirmando una mejora significativa en la postura de seguridad del sitio.
 
+### Auditoría adicional de TLS con SSL Labs
+
+Como validación complementaria de la capa HTTPS, se realizó una auditoría con **Qualys SSL Labs** sobre `https://mipokedex.duckdns.org/`.
+
+Resultado resumido:
+
+| Elemento | Resultado |
+|---|---|
+| Herramienta | SSL Labs |
+| Calificación TLS | **A+** |
+| Protocolos habilitados | TLS 1.2 y TLS 1.3 |
+| HSTS | Presente |
+| RC4 | No soportado |
+| Heartbleed / POODLE / FREAK / LOGJAM / BEAST | No detectadas |
+
+Hallazgos principales:
+
+1. La capa TLS quedó endurecida con una configuración moderna y sin protocolos obsoletos.
+2. El sitio presenta **compatibilidad limitada con clientes muy antiguos**, lo cual es esperable al restringir el servicio a TLS modernos.
+3. La mejora pendiente más importante sigue estando en la **CSP del navegador**, no en la capa TLS.
+
 ### Advertencia restante para llegar a A+
 
 La única observación importante restante es el uso de `'unsafe-inline'` dentro de la política de `script-src` en la **Content-Security-Policy**. Este punto está asociado a un script inline heredado en `index.html`. Para obtener **A+**, se debe:
@@ -151,7 +172,7 @@ Este ejercicio permitió comprobar que el despliegue y la seguridad web no son a
 1. **La accesibilidad pública no es suficiente**: una aplicación puede estar “en línea” y aun así ser insegura.
 2. **Los encabezados HTTP sí impactan la seguridad real**: ayudan a reducir vectores comunes como XSS, clickjacking y fuga de información.
 3. **La operación de infraestructura importa**: detalles como el port forwarding, el DNS dinámico y la renovación automática del certificado son críticos para la continuidad del servicio.
-4. **Los problemas reales rara vez son lineales**: durante el despliegue aparecieron incidencias de paquetes, validación de correo para Certbot, red doméstica y compatibilidad de políticas CSP.
+4. **Los problemas reales rara vez son lineales**: durante el despliegue aparecieron incidencias de paquetes, validación de correo para Certbot, red doméstica, compatibilidad de políticas CSP y decisiones de endurecimiento TLS.
 
 ## 11. Referencias
 
