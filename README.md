@@ -1,5 +1,7 @@
 # Pokédex Angular - Documentación del Proyecto y Publicación
 
+**Autor:** Yeison Buelvas
+
 ## 1. Resumen ejecutivo
 
 Este repositorio documenta el despliegue público y seguro de la aplicación **Pokédex Angular**, una web estática desarrollada con Angular para consultar especies Pokémon, estadísticas base, textos de la Pokédex y recursos visuales obtenidos desde servicios externos como **PokéAPI**, **PokéAPI GraphQL** y **assets.pokemon.com**.
@@ -79,7 +81,27 @@ https://mipokedex.duckdns.org/
 
 > Importante: por seguridad, el token real no debe publicarse en documentación ni repositorios públicos.
 
-## 6. Arquitectura de la solución
+## 6. Configuraciones iniciales y parámetros aplicados
+
+Para dejar trazabilidad clara del despliegue, estos fueron los parámetros principales configurados durante la publicación:
+
+| Componente | Parámetro | Valor aplicado |
+|---|---|---|
+| Build Angular | `base-href` | `/` |
+| DuckDNS | Subdominio | `mipokedex.duckdns.org` |
+| Servidor | Web root | `/var/www/pokedex` |
+| Nginx | `server_name` | `mipokedex.duckdns.org` |
+| Router | Interfaz WAN | `ip2` |
+| Router | Puertos reenviados | `80` y `443` hacia `192.168.1.9` |
+| Firewall | Puertos permitidos | `80/tcp`, `443/tcp`, `OpenSSH` |
+| Certbot | Método de validación | `webroot` |
+| Certbot | Webroot | `/var/www/pokedex` |
+
+Estos valores muestran exactamente dónde y cómo se aplicaron los parámetros operativos del despliegue, aun cuando la solución no depende de variables de entorno tradicionales como en plataformas PaaS.
+
+**Evidencia:** [Ver captura de la configuración de port mapping en el router](https://drive.google.com/file/d/1MKOpaW02ilWm5HA9LvEUu8el87RsdcKD/view?usp=sharing)
+
+## 7. Arquitectura de la solución
 
 ```text
 Usuario en Internet
@@ -100,7 +122,7 @@ Kali Linux (192.168.1.9)
 Nginx -> /var/www/pokedex
 ```
 
-## 7. Seguridad implementada
+## 8. Seguridad implementada
 
 Se configuraron los siguientes controles de seguridad en Nginx:
 
@@ -120,7 +142,9 @@ Además:
 - se abrió únicamente lo necesario en el firewall (`80`, `443`, `OpenSSH`),
 - se validó la renovación automática del certificado.
 
-## 8. Resultado del despliegue
+**Evidencia:** [Ver captura de los headers y la configuración aplicada](https://drive.google.com/file/d/1H7J3lz1SiNSZkvHuRXbMuU6iDoUJpZSI/view?usp=sharing)
+
+## 9. Resultado del despliegue
 
 La aplicación quedó accesible públicamente en:
 
@@ -130,6 +154,31 @@ https://mipokedex.duckdns.org/
 
 El análisis en **securityheaders.com** arrojó una calificación **A**, confirmando una mejora significativa en la postura de seguridad del sitio.
 
+**Evidencia:** [Ver captura del resultado en Security Headers](https://drive.google.com/file/d/12P8wyjJ2WpCKw3AYr51RS3V792eSzMtO/view?usp=drive_link)
+
+### Auditoría adicional de TLS con SSL Labs
+
+Como validación complementaria de la capa HTTPS, se realizó una auditoría con **Qualys SSL Labs** sobre `https://mipokedex.duckdns.org/`.
+
+Resultado resumido:
+
+| Elemento | Resultado |
+|---|---|
+| Herramienta | SSL Labs |
+| Calificación TLS | **A+** |
+| Protocolos habilitados | TLS 1.2 y TLS 1.3 |
+| HSTS | Presente |
+| RC4 | No soportado |
+| Heartbleed / POODLE / FREAK / LOGJAM / BEAST | No detectadas |
+
+Hallazgos principales:
+
+1. La capa TLS quedó endurecida con una configuración moderna y sin protocolos obsoletos.
+2. El sitio presenta **compatibilidad limitada con clientes muy antiguos**, lo cual es esperable al restringir el servicio a TLS modernos.
+3. La mejora pendiente más importante sigue estando en la **CSP del navegador**, no en la capa TLS.
+
+**Evidencia:** [Ver captura de la auditoría en SSL Labs](https://drive.google.com/file/d/1tNjd3UznMcyKDm74IBwDplBvmzQZsWik/view?usp=drive_link)
+
 ### Advertencia restante para llegar a A+
 
 La única observación importante restante es el uso de `'unsafe-inline'` dentro de la política de `script-src` en la **Content-Security-Policy**. Este punto está asociado a un script inline heredado en `index.html`. Para obtener **A+**, se debe:
@@ -137,23 +186,33 @@ La única observación importante restante es el uso de `'unsafe-inline'` dentro
 1. eliminar ese script inline si ya no es necesario en el entorno Nginx, o
 2. reemplazar la excepción por un `nonce` o un `sha256` específico.
 
-## 9. Archivos de documentación incluidos
+## 10. Evidencias propias de la entrega
+
+Como respaldo del proceso realizado, se incorporaron evidencias propias del despliegue y de las validaciones finales:
+
+| Evidencia | Enlace |
+|---|---|
+| Captura del resultado en Security Headers | [Ver captura](https://drive.google.com/file/d/12P8wyjJ2WpCKw3AYr51RS3V792eSzMtO/view?usp=drive_link) |
+| Captura de auditoría adicional SSL Labs | [Ver captura](https://drive.google.com/file/d/1tNjd3UznMcyKDm74IBwDplBvmzQZsWik/view?usp=drive_link) |
+| Captura de headers/configuración aplicada | [Ver captura](https://drive.google.com/file/d/1H7J3lz1SiNSZkvHuRXbMuU6iDoUJpZSI/view?usp=sharing) |
+
+## 11. Archivos de documentación incluidos
 
 Este repositorio entrega dos documentos principales:
 
 - **README.md**: visión general del proyecto, solución elegida, arquitectura, seguridad y resultados.
 - **Despliegue.md**: procedimiento técnico detallado, comandos, configuración, incidentes y soluciones aplicadas.
 
-## 10. Reflexión técnica
+## 12. Reflexión técnica
 
 Este ejercicio permitió comprobar que el despliegue y la seguridad web no son actividades separadas. Publicar un sitio en internet sin HTTPS, sin firewall y sin políticas de seguridad adecuadas expone al sistema a riesgos evitables. Entre los aprendizajes principales destacan:
 
 1. **La accesibilidad pública no es suficiente**: una aplicación puede estar “en línea” y aun así ser insegura.
 2. **Los encabezados HTTP sí impactan la seguridad real**: ayudan a reducir vectores comunes como XSS, clickjacking y fuga de información.
 3. **La operación de infraestructura importa**: detalles como el port forwarding, el DNS dinámico y la renovación automática del certificado son críticos para la continuidad del servicio.
-4. **Los problemas reales rara vez son lineales**: durante el despliegue aparecieron incidencias de paquetes, validación de correo para Certbot, red doméstica y compatibilidad de políticas CSP.
+4. **Los problemas reales rara vez son lineales**: durante el despliegue aparecieron incidencias de paquetes, validación de correo para Certbot, red doméstica, compatibilidad de políticas CSP y decisiones de endurecimiento TLS.
 
-## 11. Referencias
+## 13. Referencias
 
 - Angular: https://angular.io/
 - PokéAPI: https://pokeapi.co/
@@ -163,7 +222,7 @@ Este ejercicio permitió comprobar que el despliegue y la seguridad web no son a
 - Nginx: https://nginx.org/
 - UFW: https://wiki.ubuntu.com/UncomplicatedFirewall
 
-## 12. Estado final
+## 14. Estado final
 
 La entrega cumple con los objetivos principales del caso:
 
